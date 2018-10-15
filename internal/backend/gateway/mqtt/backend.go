@@ -193,7 +193,12 @@ func (b *Backend) SendTXPacket(txPacket gw.DownlinkFrame) error {
 		"qos":   b.config.QOS,
 	}).Info("gateway/mqtt: publishing downlink frame")
 
-	if token := b.conn.Publish(topic.String(), b.config.QOS, false, bb); token.Wait() && token.Error() != nil {
+	err = sentTimer("down", func() error {
+		token := b.conn.Publish(topic.String(), b.config.QOS, false, bb)
+		token.Wait()
+		return token.Error()
+	})
+	if err != nil {
 		return errors.Wrap(err, "gateway/mqtt: publish downlink frame error")
 	}
 	return nil
@@ -218,7 +223,12 @@ func (b *Backend) SendGatewayConfigPacket(configPacket gw.GatewayConfiguration) 
 		"qos":   b.config.QOS,
 	}).Info("gateway/mqtt: publishing gateway configuration")
 
-	if token := b.conn.Publish(topic.String(), b.config.QOS, false, bb); token.Wait() && token.Error() != nil {
+	err = sentTimer("config", func() error {
+		token := b.conn.Publish(topic.String(), b.config.QOS, false, bb)
+		token.Wait()
+		return token.Error()
+	})
+	if err != nil {
 		return errors.Wrap(err, "gateway/mqtt: publish gateway configuration error")
 	}
 
@@ -276,6 +286,7 @@ func (b *Backend) rxPacketHandler(c paho.Client, msg paho.Message) {
 		return
 	}
 
+	receivedCounter("up")
 	b.rxPacketChan <- uplinkFrame
 }
 
@@ -314,6 +325,7 @@ func (b *Backend) statsPacketHandler(c paho.Client, msg paho.Message) {
 	}
 
 	log.WithField("gateway_id", gatewayID).Info("gateway/mqtt: gateway stats packet received")
+	receivedCounter("stats")
 	b.statsPacketChan <- gatewayStats
 }
 
@@ -351,6 +363,7 @@ func (b *Backend) ackPacketHandler(c paho.Client, msg paho.Message) {
 	}
 
 	log.WithField("gateway_id", gatewayID).Info("backend/gateway: downlink tx acknowledgement received")
+	receivedCounter("ack")
 	b.downlinkTXAckChan <- ack
 }
 

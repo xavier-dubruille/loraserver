@@ -82,6 +82,10 @@
   name = "cloud.google.com/go"
   version = "v0.25.0"
 
+[[constraint]]
+  name = "github.com/prometheus/client_golang"
+  version = "0.8.0"
+
 [prune]
   non-go = true
   go-tests = true

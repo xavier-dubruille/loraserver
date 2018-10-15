@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net"
+	"net/http"
 	"os"
 	"os/signal"
 	"strings"
@@ -16,6 +17,7 @@ import (
 	"github.com/grpc-ecosystem/go-grpc-middleware/logging/logrus"
 	"github.com/grpc-ecosystem/go-grpc-middleware/tags"
 	"github.com/pkg/errors"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	migrate "github.com/rubenv/sql-migrate"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -64,6 +66,7 @@ func run(cmd *cobra.Command, args []string) error {
 		setJoinServer,
 		setNetworkController,
 		runDatabaseMigrations,
+		startPrometheusServer,
 		fixV2RedisCache,
 		startAPIServer,
 		startLoRaServer(server),
@@ -331,6 +334,28 @@ func runDatabaseMigrations() error {
 		}
 		log.WithField("count", n).Info("migrations applied")
 	}
+	return nil
+}
+
+func startPrometheusServer() error {
+	if !config.C.Metrics.Prometheus.EndpointEnabled {
+		return nil
+	}
+
+	log.WithFields(log.Fields{
+		"bind": config.C.Metrics.Prometheus.Bind,
+	}).Info("starting prometheus metrics server")
+
+	server := http.Server{
+		Handler: promhttp.Handler(),
+		Addr:    config.C.Metrics.Prometheus.Bind,
+	}
+
+	go func() {
+		err := server.ListenAndServe()
+		log.WithError(err).Error("prometheus metrics server error")
+	}()
+
 	return nil
 }
 

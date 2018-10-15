@@ -592,6 +592,22 @@ tls_cert=""
 
 # tls key used by the network-controller client (optional)
 tls_key=""
+
+
+# Metrics configuration.
+[metrics]
+
+  # Metrics stored in Prometheus.
+  #
+  # These metrics expose information about the state of the LoRa Server
+  # instance like number of messages received and sent, duration of
+  # database queries and functions calls.
+  [metrics.prometheus]
+  # Expose Prometheus metrics endpoint.
+  endpoint_enabled=false
+
+  # The ip:port to bind the Prometheus server to.
+  bind=""
 {{< /highlight >}}
 
 ## Securing the network-server API
