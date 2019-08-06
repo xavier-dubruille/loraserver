@@ -36,7 +36,7 @@
 # * require - Always SSL (skip verification)
 # * verify-ca - Always SSL (verify that the certificate presented by the server was signed by a trusted CA)
 # * verify-full - Always SSL (verify that the certification presented by the server was signed by a trusted CA and the server host name matches the one in the certificate)
-dsn="postgres://localhost/loraserver_ns?sslmode=disable"
+dsn="postgres://192.168.1.17/loraserver_ns?sslmode=disable"
 
 
 # Redis settings
@@ -47,7 +47,7 @@ dsn="postgres://localhost/loraserver_ns?sslmode=disable"
 #
 # For more information about the Redis URL format, see:
 # https://www.iana.org/assignments/uri-schemes/prov/redis
-url="redis://localhost:6379"
+url="redis://192.168.1.17:6379"
 
 
 # Network-server settings.
@@ -157,7 +157,7 @@ net_id="000000"
     command_topic_template="gateway/{{ .GatewayID }}/command/{{ .CommandType }}"
 
     # MQTT server (e.g. scheme://host:port where scheme is tcp, ssl or ws)
-    server="tcp://localhost:1883"
+    server="tcp://192.168.1.17:1883"
 
     # Connect with the given username (optional)
     username=""
@@ -187,5 +187,5 @@ timezone="Local"
   # hostname:port of the default join-server
   #
   # This API is provided by LoRa App Server.
-  server="http://localhost:8003"
+  server="http://192.168.1.17:8003"
 

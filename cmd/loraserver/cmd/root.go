@@ -49,11 +49,11 @@ func init() {
 	viper.BindPFlag("general.log_level", rootCmd.PersistentFlags().Lookup("log-level"))
 
 	// default values
-	viper.SetDefault("redis.url", "redis://localhost:6379")
+	viper.SetDefault("redis.url", "redis://192.168.1.17:6381")
 	viper.SetDefault("redis.max_idle", 10)
 	viper.SetDefault("redis.idle_timeout", 5*time.Minute)
 
-	viper.SetDefault("postgresql.dsn", "postgres://localhost/loraserver_ns?sslmode=disable")
+	viper.SetDefault("postgresql.dsn", "postgres://loraserver_ns:loraserver_ns@192.168.1.17:5434/loraserver_ns?sslmode=disable")
 	viper.SetDefault("postgresql.automigrate", true)
 
 	viper.SetDefault("network_server.net_id", "000000")
@@ -67,9 +67,9 @@ func init() {
 
 	viper.SetDefault("network_server.gateway.stats.aggregation_intervals", []string{"minute", "hour", "day"})
 	viper.SetDefault("network_server.gateway.stats.create_gateway_on_stats", true)
-	viper.SetDefault("network_server.gateway.backend.mqtt.server", "tcp://localhost:1883")
+	viper.SetDefault("network_server.gateway.backend.mqtt.server", "tcp://192.168.1.17:1885")
 
-	viper.SetDefault("join_server.default.server", "http://localhost:8003")
+	viper.SetDefault("join_server.default.server", "http://192.168.1.17:8013")
 
 	viper.SetDefault("network_server.network_settings.installation_margin", 10)
 	viper.SetDefault("network_server.network_settings.rx1_delay", 1)
@@ -86,7 +86,7 @@ func init() {
 	viper.SetDefault("network_server.gateway.backend.mqtt.command_topic_template", "gateway/{{ .GatewayID }}/command/{{ .CommandType }}")
 	viper.SetDefault("network_server.gateway.backend.mqtt.clean_session", true)
 	viper.SetDefault("join_server.resolve_domain_suffix", ".joineuis.lora-alliance.org")
-	viper.SetDefault("join_server.default.server", "http://localhost:8003")
+
 
 	viper.SetDefault("network_server.gateway.backend.gcp_pub_sub.uplink_retention_duration", time.Hour*24)
 
