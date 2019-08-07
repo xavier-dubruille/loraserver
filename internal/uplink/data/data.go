@@ -26,12 +26,15 @@ import (
 	"github.com/brocaar/loraserver/internal/models"
 	"github.com/brocaar/loraserver/internal/storage"
 	"github.com/brocaar/lorawan"
+
+	MQTT "github.com/eclipse/paho.mqtt.golang"
 )
 
 const applicationClientTimeout = time.Second
 
 var tasks = []func(*dataContext) error{
 	setContextFromDataPHYPayload,
+	roamIfNeeded,
 	getDeviceSessionForPHYPayload,
 	decryptFOptsMACCommands,
 	decryptFRMPayloadMACCommands,
@@ -102,6 +105,61 @@ func setContextFromDataPHYPayload(ctx *dataContext) error {
 	}
 	ctx.MACPayload = macPL
 	return nil
+}
+
+func roamIfNeeded(ctx *dataContext) error {
+	// 1. check if roaming is activated
+	// 2. check if it's a non-null net-id (and if it's not ours)
+
+	devAddr := ctx.RXPacket.PHYPayload.MACPayload.(*lorawan.MACPayload).FHDR.DevAddr
+	nwkID := devAddr.NwkID()
+
+	if  devAddr == [4]byte{0, 18, 79, 17} {  // if net id is not null and not ours ...
+		url := findURLForNwkID(nwkID)
+		sendRoamedPacket(url, ctx)
+	}
+
+	return nil
+}
+
+func sendRoamedPacket(url string, ctx *dataContext) {
+
+	rx := ctx.RXPacket
+	phyBinary, err  := rx.PHYPayload.MarshalBinary()
+	u := gw.UplinkFrame{TxInfo:rx.TXInfo,
+		RxInfo:rx.RXInfoSet[0],
+		PhyPayload: phyBinary}
+
+	// this is still a POC and it should be sent to mqtt (because not standard, because backend may not be mqtt, ...)
+	// instead, I'ld like to add a new rest endpoint  in grpc or json (that could become a standard ^^) :
+	//          It will then check roaming policies of the entering packet then send to his own gw backend (directly
+	//          into his chan, so it does not reach mqtt.
+	// Also, it would be better to have a special GW, only for roaming.
+	opts := MQTT.NewClientOptions()
+	opts.AddBroker(url)
+	opts.SetClientID("xx")
+	opts.SetUsername("")
+	opts.SetPassword("")
+	opts.SetCleanSession(false)
+
+	client := MQTT.NewClient(opts)
+	if token := client.Connect(); token.Wait() && token.Error() != nil {
+		panic(token.Error())
+	}
+
+	messageBytes, err := u.XXX_Marshal([]byte{}, true)
+	fmt.Println(err)
+	token := client.Publish("gateway/b827ebfffef724e0/event/up", 0, false, messageBytes)
+	token.Wait()
+
+
+	client.Disconnect(250)
+	fmt.Println(u)
+}
+
+func findURLForNwkID(nwkID []byte)  string {
+	// first check local memory, then query dns 
+	return  "tcp://192.168.1.17:1883"
 }
 
 func getDeviceSessionForPHYPayload(ctx *dataContext) error {
